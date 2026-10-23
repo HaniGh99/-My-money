@@ -277,7 +277,33 @@ let rc=0;$("rst").onclick=()=>{const b=$("rst");if(!rc){rc=1;b.textContent="اض
   rc=0;b.textContent="مسح كل البيانات";S={cur:"ل.س",pu:0,pg:0,pct:10,base:1000,open:{c:0,u:0,uc:0,g:0,gc:0},L:[],goals:[],budgets:{}};save();sync();endEd();R();msg("تم مسح البيانات")};
 let DB=null,UID=null,pt,MK=null;
 const push=()=>{if(!DB||!UID)return;clearTimeout(pt);pt=setTimeout(()=>DB.doc("data/users/"+UID+"/state").set({ts:S.ts,json:JSON.stringify(S)}).then(()=>setSy("☁ متزامن"),()=>setSy("⚠ فشلت المزامنة")),1500)};
-function applyMk(){const m=MK;if(!m||S.auto===false)return;if(m.usd&&m.usd.b>0)S.pu=m.usd.b;if(m.g21&&m.g21.b>0)S.pg=m.g21.b;$("pu").value=S.pu||"";$("pg").value=S.pg||""}
+async function autoFetchRates() {
+  try {
+    let res = await fetch('https://open.er-api.com/v6/latest/USD');
+    let data = await res.json();
+    if (data && data.rates && S.auto !== false) {
+      let codeMap = { "ل.س": "SYP", "ر.س": "SAR", "د.إ": "AED", "ج.م": "EGP", "د.ك": "KWD", "ر.ق": "QAR", "د.أ": "JOD" };
+      let symbol = codeMap[S.cur] || "USD";
+      if (data.rates[symbol]) {
+        S.pu = Math.round(data.rates[symbol]);
+        $("pu").value = S.pu;
+        save();
+        R();
+      }
+    }
+  } catch(e) { console.log("تعذر تحديث سعر الصرف تلقائياً"); }
+}
+
+function applyMk(){
+  const m=MK;
+  if(!m||S.auto===false)return;
+  if(m.usd&&m.usd.b>0)S.pu=m.usd.b;
+  if(m.g21&&m.g21.b>0)S.pg=m.g21.b;
+  $("pu").value=S.pu||"";
+  $("pg").value=S.pg||"";
+  autoFetchRates(); // استدعاء التحديث التلقائي بحسب العملة المختارة
+}
+
 function mkView(){const m=MK,el=$("mk"),mn=m?(Date.now()-new Date(m.ts))/6e4:0;$("age").textContent=m?"بيانات السوق: قبل "+(mn<60?Math.round(mn)+" دقيقة":mn<1440?Math.round(mn/60)+" ساعة":Math.round(mn/1440)+" يوم"):"";if(!m||!m.usd||!m.g21){el.innerHTML="";return}
   const old=(Date.now()-new Date(m.ts))/36e5>36,ic={warn:"⚠",tip:"✔",info:"ℹ"};
   el.innerHTML=`<div class="card"><h2>سوق الليرة اليوم</h2><p class="tip">دولار: شراء ${nf(m.usd.b)} / مبيع ${nf(m.usd.s)} • ذهب 21: شراء ${nf(m.g21.b)} / مبيع ${nf(m.g21.s)} (بالجديدة)<br>آخر تحديث: ${new Date(m.ts).toLocaleString("ar-u-nu-latn")}${old?" ⚠ قديمة، اطلب مني التحديث":""}</p>${S.auto===false?'<button id="au">العودة للأسعار التلقائية</button>':""}${m.summary?'<p class="tip"><b>الخلاصة:</b> '+esc(m.summary)+'</p>':""}${(m.advice||[]).length?'<h3>تحذيرات ونصائح من أخبار السوق'+(((Date.now()-new Date(m.advTs||m.ts))/36e5>48)?" ⚠ قديمة، اطلب التحديث":"")+'</h3>':""}${(m.advice||[]).map(a=>`<p class="tip"><b>${ic[a.l]||"ℹ"}</b> ${a.c?"<b>["+esc(a.c)+"]</b> ":""}${esc(a.t)}${a.s?" <small>("+esc(a.s)+")</small>":""}${a.x&&new Date(a.x)<Date.now()?" <small>⚠ قديم</small>":""}</p>`).join("")}${(m.sources||[]).length?'<h3>المصادر</h3><p class="tip">'+m.sources.map(x=>esc(x)).join(" • ")+'</p>':""}<p class="tip">المصدر الأساسي للأسعار: sp-today.com. التحليل معلوماتي وليس نصيحة استثمارية ولا يضمن نتيجة، والقرار قرارك.</p></div>`}
