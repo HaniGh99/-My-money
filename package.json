@@ -1,0 +1,8 @@
+{
+  "name": "money-manager",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": { "test": "node test/run.mjs" },
+  "dependencies": { "@netlify/blobs": "^8.1.0" }
+}
