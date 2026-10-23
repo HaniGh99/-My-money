@@ -36,7 +36,7 @@ jobs:
 
       - name: Build APK File
         run: |
-          npx bubblewrap init --manifest=https://your-app-url.netlify.app/manifest.webmanifest
+          npx bubblewrap init --manifest=https://random-name-12345.netlify.app/manifest.webmanifest
           npx bubblewrap build
 
       - name: Upload APK Artifact
