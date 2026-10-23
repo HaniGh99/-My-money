@@ -34,9 +34,13 @@ jobs:
           npm install
           npm run build --if-present
 
+      - name: Initialize Bubblewrap Manifest
+        run: |
+          # هذه الخطوة تنشئ إعدادات الأندرويد اعتماداً على ملف manifest الموجود في مشروعك محلياً
+          npx bubblewrap init --manifest=./public/manifest.webmanifest --skip-validation
+
       - name: Build APK File
         run: |
-          npx bubblewrap init --manifest=https://random-name-12345.netlify.app/manifest.webmanifest
           npx bubblewrap build
 
       - name: Upload APK Artifact
