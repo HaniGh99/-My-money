@@ -34,11 +34,11 @@ jobs:
           npm install
           npm run build --if-present
 
-      - name: Build APK File
+      - - name: Build APK File
         run: |
-          # استبدل الرابط أدناه برابط GitHub Pages الخاص بك مع إضافة manifest.webmanifest في نهايته
           npx bubblewrap init --manifest=https://hanigh99.github.io/-My-money/public/manifest.webmanifest --skip-validation
           npx bubblewrap build
+
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v3
